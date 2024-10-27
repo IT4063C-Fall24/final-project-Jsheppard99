@@ -13,6 +13,9 @@ Data Sources: Much of the data would have to come from the USDA or food-related 
   1. The USDA has a food access map chart that shows how food is scattered across the country, and this will show the areas with higher food insecurity to work with. It's an interactive map that can be used to pinpoint and then rank areas of high food insecurity and waste for redistribution.
   2. The EPA provides data for methods ranking the limitation of food waste, and this includes the impact of taking food away from landfills as files. In addition, ReFED has an insights engine that contains an impact calculator to download theoretical database data. This will provide information on the benefits and costs of redistributing food from landfills to food banks.
   3. The USDA also provides an agricultural marketing service that tracks the movement of food products through its supply chain journey. This data can be downloaded as datasets, showing truck rates and availability as volumes and as a use index. This will show routes and emissions produced by current methods and where exactly production is going.
+
+  https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/interactive-charts-and-highlights/
+  (foodsecurity_datafile.xlsx)
 ## Self Assessment and Reflection
 
 <!-- Edit the following section with your self assessment and reflection -->
