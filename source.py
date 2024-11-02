@@ -33,6 +33,11 @@ plt.tight_layout()
 plt.show()
 
 
+state_data = state_data.dropna(subset=['Year', 'State', 'Food insecurity prevalence'])
+most_recent_data = most_recent_data.drop_duplicates()
+# dropping duplicates and rows with missing values
+
+
 # This organizes food insecurity by state so we can see which states suffer the most and appropriately reroute potential 
 # food waste to areas in need before it has the chance to be thrown out.
 
@@ -61,6 +66,10 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
+data = data.dropna(subset=['Year', 'Category'])
+data_2023 = data_2023.dropna(subset=['Subcategory', 'Food insecure-percent'])
+# dropping duplicates and rows with missing values
+
 # Through this graph we can identify which races are most affected by food insecurity and allocate more resources to those communities.
 
 # In[]:
@@ -88,6 +97,11 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
+data_2023 = data_2023.dropna(subset=['Subcategory', 'Food insecure-percent'])
+data_2023 = data_2023.drop_duplicates()
+# dropping duplicates and rows with missing values
+
+
 # We can use this graph to compare inner city food insecurities to those who live 
 # outside the downtown districts to decide whether residence in relation to the city is a factor in food scarcity.
 
@@ -112,6 +126,12 @@ plt.title('Food Insecure Households by Subcategory (2023)')
 plt.tight_layout()
 
 plt.show()
+
+data = data.drop_duplicates()
+data = data.dropna(subset=['Category', 'Subcategory', 'Food insecure-1,000'])
+# dropping duplicates and rows with missing values
+
+
 
 # We can use this bar graph to see whether employment and 
 # education status is a factor in those struggling with food insecurity, then reroute food to areas with a high concentration of these social groups.
