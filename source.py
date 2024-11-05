@@ -38,51 +38,54 @@ import matplotlib.pyplot as plt
 file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
 data = pd.read_excel(file_url, sheet_name='Food security, all households')
 
+# Define the desired category for filtering
 desired_category = 'Race/ethnicity of households'
 
+# Filter the data to include only rows for the year 2023 and the desired category
 data_2023 = data[(data['Year'] == 2023) & (data['Category'] == desired_category)]
 
+# Clean the race/ethnicity data by removing rows with missing values
 race_ethnicity = data_2023['Subcategory'].dropna()
+
+# Clean the food insecurity data by removing rows with missing values
 food_insecurity = data_2023['Food insecure-percent'].dropna()
 
+# Create a new DataFrame `data_clean` by combining the cleaned race/ethnicity and food insecurity data
 data_clean = pd.DataFrame({'Race/Ethnicity': race_ethnicity, 'Food Insecurity': food_insecurity}).dropna()
 
+# Create a plot to visualize the food insecurity by race/ethnicity
 plt.figure(figsize=(10, 6))
+
 plt.bar(data_clean['Race/Ethnicity'], data_clean['Food Insecurity'], color='skyblue')
-plt.xlabel("Race/Ethnicity")
-plt.ylabel("Food Insecurity Prevalence (%)")
+plt.xlabel("Race/Ethnicity")  
+plt.ylabel("Food Insecurity Prevalence (%)")  
 plt.title("Food Insecurity by Race and Ethnicity (2023)")
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
-data = data.dropna(subset=['Year', 'Category'])
-data_2023 = data_2023.dropna(subset=['Subcategory', 'Food insecure-percent'])
-print(data_2023)
-
-# dropping duplicates and rows with missing values
-
-
-# This organizes food insecurity by state so we can see which states suffer the most and appropriately reroute potential 
-# food waste to areas in need before it has the chance to be thrown out.
+# Through this graph we can identify which races are most affected by food insecurity and allocate more resources to those communities.
 
 
 # In[5]:
 
 
-import pandas as pd
-import matplotlib.pyplot as plt
-
 file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
 data = pd.read_excel(file_url, sheet_name='Food security, all households')
 
+# Define the desired category to filter by
 desired_category = 'Area of residence'
 
+# Filter the data for the year 2023 and the selected category ('Area of residence')
 data_2023 = data[(data['Year'] == 2023) & (data['Category'] == desired_category)]
 
+# Clean the 'Subcategory' column (which contains area of residence information)
 area_of_residence = data_2023['Subcategory'].dropna()
+
+# Clean the 'Food insecure-percent' column
 food_insecurity = data_2023['Food insecure-percent'].dropna()
 
+# Create a new DataFrame with the cleaned data
 data_clean = pd.DataFrame({'Area of Residence': area_of_residence, 'Food Insecurity': food_insecurity}).dropna()
 
 plt.figure(figsize=(10, 6))
@@ -93,87 +96,74 @@ plt.title("Food Insecurity by Area of Residence (2023)")
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
-
-data_2023 = data_2023.dropna(subset=['Subcategory', 'Food insecure-percent'])
-data_2023 = data_2023.drop_duplicates()
-print(data_2023)
-# dropping duplicates and rows with missing values
-
 
 # We can use this graph to compare inner city food insecurities to those who live 
 # outside the downtown districts to decide whether residence in relation to the city is a factor in food scarcity.
 
-
 # In[7]:
 
-
-import pandas as pd
-import matplotlib.pyplot as plt
 
 file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
 data = pd.read_excel(file_url, sheet_name='Educ, emp, disability')
 
-filtered_data = data[['Category', 'Subcategory', 'Food insecure-1,000']]
+# Make an explicit copy to avoid SettingWithCopyWarning
+filtered_data = data[data['Year'] == 2023][['Subcategory', 'Sub-subcategory', 'Food insecure-percent']].copy()
 
-grouped_data = filtered_data.groupby(['Category', 'Subcategory']).sum().reset_index()
+# Filter by 'Sub-subcategory' for Employment
+filtered_data = filtered_data[filtered_data['Sub-subcategory'].isin(['Full-time', 'Retired', 'Part-time economic reasons', 'Part-time non-economic reasons', 'Unemployed', 'Disabled'])]
+
+# Handle missing values - Drop rows with NaN values in the relevant columns
+filtered_data.dropna(subset=['Subcategory', 'Sub-subcategory', 'Food insecure-percent'], inplace=True)
+
+# Convert 'Food insecure-percent' to numeric values (in case it's stored as strings)
+filtered_data['Food insecure-percent'] = pd.to_numeric(filtered_data['Food insecure-percent'], errors='coerce')
+
+# Drop any remaining rows with NaN values in 'Food insecure-percent' after conversion
+filtered_data.dropna(subset=['Food insecure-percent'], inplace=True)
+
+# Group data by 'Subcategory' and 'Sub-subcategory', and aggregate by summing the 'Food insecure-percent' column
+grouped_data = filtered_data.groupby(['Subcategory', 'Sub-subcategory'])['Food insecure-percent'].sum().reset_index()
 
 plt.figure(figsize=(12, 6))
-plt.bar(grouped_data['Subcategory'], grouped_data['Food insecure-1,000'], color='skyblue')
-plt.xticks(rotation=90)
-plt.xlabel('Subcategory')
-plt.ylabel('Food Insecure (1,000)')
-plt.title('Food Insecure Households by Subcategory (2023)')
+plt.bar(grouped_data['Sub-subcategory'], grouped_data['Food insecure-percent'], color='skyblue')
+plt.xticks(rotation=45)
+plt.xlabel('Sub-subcategory')
+plt.ylabel('Food Insecure Percent')
+plt.title('Food Insecure Households by Percent (2023)')
 plt.tight_layout()
 
 plt.show()
 
-data = data.drop_duplicates()
-data = data.dropna(subset=['Category', 'Subcategory', 'Food insecure-1,000'])
-print(data)
-
-# dropping duplicates and rows with missing values
-
-
-
-# We can use this bar graph to see whether employment and 
-# education status is a factor in those struggling with food insecurity, then reroute food to areas with a high concentration of these social groups.
+# We can use this bar graph to see whether employment status 
+# is a factor in those struggling with food insecurity, then reroute food to areas with a high concentration of these social groups, such as retirement communities.
 
 
 # In[ ]:
 
-
-import pandas as pd
-import matplotlib.pyplot as plt
-
 file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
-data = pd.read_excel(file_url, sheet_name='Food security, all households')
+state_data = pd.read_excel(file_url, sheet_name='Food security by State')
 
-desired_category = 'Area of residence'
+# Filter for the most recent year range "2021–2023" and exclude the "U.S. total"
+most_recent_data = state_data[(state_data['Year'] == '2021–2023') & (state_data['State'] != 'U.S. total')]
 
-data_2023 = data[(data['Year'] == 2023) & (data['Category'] == desired_category)]
+# Replace missing or null values with a placeholder, e.g., 'Unknown'
+state_data['State'].fillna('Unknown', inplace=True)
 
-area_of_residence = data_2023['Subcategory'].dropna()
-food_insecurity = data_2023['Food insecure-percent'].dropna()
+# Extract data for plotting
+states = most_recent_data['State']
+food_insecurity = most_recent_data['Food insecurity prevalence']
 
-data_clean = pd.DataFrame({'Area of Residence': area_of_residence, 'Food Insecurity': food_insecurity}).dropna()
-
-plt.figure(figsize=(10, 6))
-plt.bar(data_clean['Area of Residence'], data_clean['Food Insecurity'], color='skyblue')
-plt.xlabel("Area of Residence")
+# Plotting the bar graph
+plt.figure(figsize=(14, 8))
+plt.bar(states, food_insecurity, color='skyblue')
+plt.xlabel("State")
 plt.ylabel("Food Insecurity Prevalence (%)")
-plt.title("Food Insecurity by Area of Residence (2023)")
-plt.xticks(rotation=45)
+plt.title("Food Insecurity Prevalence by State (2021–2023)")
 plt.tight_layout()
 plt.show()
 
-data_2023 = data_2023.dropna(subset=['Subcategory', 'Food insecure-percent'])
-data_2023 = data_2023.drop_duplicates()
-print(data_2023)
-
-# dropping duplicates and rows with missing values
-
-# Through this graph we can identify which races are most affected by food insecurity and allocate more resources to those communities.
-
+# This organizes food insecurity by state so we can see which states suffer the most and appropriately reroute potential 
+# food waste to areas in need before it has the chance to be thrown out.
 
 # ## Resources and References
 # *What resources and references have you used for this project?*
