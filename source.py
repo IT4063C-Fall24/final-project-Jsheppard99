@@ -184,23 +184,31 @@ data1 = pd.read_excel(file_url, sheet_name='Food security, all households')
 data2 = pd.read_excel(file_url, sheet_name='Educ, emp, disability')
 data3 = pd.read_excel(file_url, sheet_name='Food security by State')
 
-desired_category_area = 'Area of residence'
-desired_category_race = 'Race/ethnicity of households'
+# Defining specific categories of interest for filtering
+desired_category_area = 'Area of residence'  # Category for area of residence
+desired_category_race = 'Race/ethnicity of households'  # Category for race/ethnicity of households
 
-
+# Filtering data based on the year and category for the race/ethnicity dataset
 race_data_filtered = data1[(data1['Year'] == 2023) & (data1['Category'] == desired_category_race)]
+
+# Filtering the state data for the years '2021–2023'
 state_data_filtered = data3[data3['Year'] == '2021–2023']
+
+# Filtering the employment and disability dataset for the year 2023, and selecting relevant subcategories
 educ_emp_data_filtered = data2[data2['Year'] == 2023][['Subcategory', 'Sub-subcategory', 'Food insecure-percent']].copy()
-educ_emp_data_filtered = educ_emp_data_filtered[educ_emp_data_filtered['Sub-subcategory'].isin(['Full-time', 'Retired', 'Part-time economic reasons', 'Part-time non-economic reasons', 'Unemployed', 'Disabled'])]
+
+# Further filtering for relevant subcategories within the 'Educ, emp, disability' data
+educ_emp_data_filtered = educ_emp_data_filtered[educ_emp_data_filtered['Sub-subcategory'].isin(
+    ['Full-time', 'Retired', 'Part-time economic reasons', 'Part-time non-economic reasons', 'Unemployed', 'Disabled'])]
+
+# Filtering data for the area of residence category in 2023
 area_data_filtered = data1[(data1['Year'] == 2023) & (data1['Category'] == desired_category_area)]
 
+# Splitting the filtered data into training and testing sets (80% train, 20% test) for each dataset
 race_train, race_test = train_test_split(race_data_filtered, test_size=0.2, random_state=42)
-
-area_train, area_test = train_test_split(area_data_filtered, test_size=0.2, random_state=42)
-
+area_train, area_test = train_test_split(area_data_filtered, test_size=0.2, random_state=42) 
 educ_emp_train, educ_emp_test = train_test_split(educ_emp_data_filtered, test_size=0.2, random_state=42)
-
-state_train, state_test = train_test_split(state_data_filtered, test_size=0.2, random_state=42)
+state_train, state_test = train_test_split(state_data_filtered, test_size=0.2, random_state=42) 
 
 # In[ ]:
 # Data Cleaning / Pipeline
@@ -274,7 +282,7 @@ print('Race Test',X_race_test.shape)
 
 # In[ ]:
 # Linear Model
-model = LinearRegression()  # Instantiate the Linear Regression model
+model = LinearRegression() 
 
 # Fit the model on the training data (X_state_train, y_state_train)
 model.fit(X_state_train, y_state_train)
@@ -285,7 +293,7 @@ y_state_pred = model.predict(X_state_test)
 # Calculate RMSE
 rmse = np.sqrt(mean_squared_error(y_state_test, y_state_pred))
 
-# Print out the RMSE to understand how well the model performed
+# Print out the RMSE
 print(rmse)
 
 # In[ ]:
@@ -303,7 +311,7 @@ decision_tree.fit(X_state_train, y_state_train_binary)
 # Predict on the test set
 y_state_pred_binary = decision_tree.predict(X_state_test)
 
-# Calculate accuracy or other metrics
+# Calculate accuracy
 accuracy = accuracy_score(y_state_test_binary, y_state_pred_binary)
 print(accuracy)
 
