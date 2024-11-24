@@ -32,9 +32,21 @@
 
 
 # Start your code here
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
+
+# In[ ]:
 file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
 data = pd.read_excel(file_url, sheet_name='Food security, all households')
 
@@ -164,6 +176,137 @@ plt.show()
 
 # This organizes food insecurity by state so we can see which states suffer the most and appropriately reroute potential 
 # food waste to areas in need before it has the chance to be thrown out.
+
+# In[ ]:
+# Splitting the Data
+file_url = 'https://github.com/IT4063C-Fall24/final-project-Jsheppard99/raw/main/assets/foodsecurity_datafile.xlsx'
+data1 = pd.read_excel(file_url, sheet_name='Food security, all households')
+data2 = pd.read_excel(file_url, sheet_name='Educ, emp, disability')
+data3 = pd.read_excel(file_url, sheet_name='Food security by State')
+
+desired_category_area = 'Area of residence'
+desired_category_race = 'Race/ethnicity of households'
+
+
+race_data_filtered = data1[(data1['Year'] == 2023) & (data1['Category'] == desired_category_race)]
+state_data_filtered = data3[data3['Year'] == '2021–2023']
+educ_emp_data_filtered = data2[data2['Year'] == 2023][['Subcategory', 'Sub-subcategory', 'Food insecure-percent']].copy()
+educ_emp_data_filtered = educ_emp_data_filtered[educ_emp_data_filtered['Sub-subcategory'].isin(['Full-time', 'Retired', 'Part-time economic reasons', 'Part-time non-economic reasons', 'Unemployed', 'Disabled'])]
+area_data_filtered = data1[(data1['Year'] == 2023) & (data1['Category'] == desired_category_area)]
+
+race_train, race_test = train_test_split(race_data_filtered, test_size=0.2, random_state=42)
+
+area_train, area_test = train_test_split(area_data_filtered, test_size=0.2, random_state=42)
+
+educ_emp_train, educ_emp_test = train_test_split(educ_emp_data_filtered, test_size=0.2, random_state=42)
+
+state_train, state_test = train_test_split(state_data_filtered, test_size=0.2, random_state=42)
+
+# In[ ]:
+# Data Cleaning / Pipeline
+
+def create_pipeline(X):
+    # Ensure all categorical columns are of type 'str'
+    categorical_features = X.select_dtypes(include=['object']).columns
+    for col in categorical_features:
+        X[col] = X[col].astype(str)  # Convert all categorical columns to strings
+    
+    # Separate features into categorical and numeric
+    numeric_features = X.select_dtypes(include=['float64', 'int64']).columns
+    categorical_features = X.select_dtypes(include=['object']).columns
+
+    # Define transformers for numeric and categorical data
+    pipeline = ColumnTransformer(
+        transformers=[
+            ('num', Pipeline([
+                ('imputer', SimpleImputer(strategy='mean')),  # Impute missing numeric values
+                ('scaler', StandardScaler())  # Standardize numeric data
+            ]), numeric_features),
+            ('cat', Pipeline([
+                ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),  # Impute missing categorical values
+                ('encoder', OneHotEncoder(handle_unknown='ignore'))  # OneHotEncode categorical data
+            ]), categorical_features)
+        ])
+
+    return pipeline
+
+# Apply pipeline to each dataset
+
+# State data
+X_state = state_train.drop(columns=['Food insecurity prevalence'])
+y_state = state_train['Food insecurity prevalence']
+state_pipeline = create_pipeline(X_state)
+X_state_transformed = state_pipeline.fit_transform(X_state)
+
+# Educ, emp, disability data
+X_educ_emp = educ_emp_train.drop(columns=['Food insecure-percent'])
+y_educ_emp = educ_emp_train['Food insecure-percent']
+educ_emp_pipeline = create_pipeline(X_educ_emp)
+X_educ_emp_transformed = educ_emp_pipeline.fit_transform(X_educ_emp)
+
+# Area of residence data
+X_area = area_train.drop(columns=['Food insecure-percent'])
+y_area = area_train['Food insecure-percent']
+area_pipeline = create_pipeline(X_area)
+X_area_transformed = area_pipeline.fit_transform(X_area)
+
+# Race/ethnicity data
+X_race = race_train.drop(columns=['Food insecure-percent'])
+y_race = race_train['Food insecure-percent']
+race_pipeline = create_pipeline(X_race)
+X_race_transformed = race_pipeline.fit_transform(X_race)
+
+# Train-test splits with transformed data
+X_state_train, X_state_test, y_state_train, y_state_test = train_test_split(X_state_transformed, y_state, test_size=0.2, random_state=42)
+X_educ_emp_train, X_educ_emp_test, y_educ_emp_train, y_educ_emp_test = train_test_split(X_educ_emp_transformed, y_educ_emp, test_size=0.2, random_state=42)
+X_area_train, X_area_test, y_area_train, y_area_test = train_test_split(X_area_transformed, y_area, test_size=0.2, random_state=42)
+X_race_train, X_race_test, y_race_train, y_race_test = train_test_split(X_race_transformed, y_race, test_size=0.2, random_state=42)
+
+# Output the shapes of the transformed train-test splits
+print('State Train', X_state_train.shape)
+print('State Test',X_state_test.shape)
+print('Educ, emp, disability Train', X_educ_emp_train.shape)
+print('Educ, emp, disability Test',X_educ_emp_test.shape)
+print('Area Train', X_area_train.shape)
+print('Area test', X_area_test.shape)
+print('Race Train', X_race_train.shape)
+print('Race Test',X_race_test.shape)   
+
+# In[ ]:
+# Linear Model
+model = LinearRegression()  # Instantiate the Linear Regression model
+
+# Fit the model on the training data (X_state_train, y_state_train)
+model.fit(X_state_train, y_state_train)
+
+# Predict the target variable (food insecurity level) on the test set
+y_state_pred = model.predict(X_state_test)
+
+# Calculate RMSE
+rmse = np.sqrt(mean_squared_error(y_state_test, y_state_pred))
+
+# Print out the RMSE to understand how well the model performed
+print(rmse)
+
+# In[ ]:
+#Classification Model
+threshold = 10  # 10% threshold for food insecurity
+
+# Create a binary target variable (high vs low food insecurity)
+y_state_train_binary = (y_state_train > threshold).astype(int)
+y_state_test_binary = (y_state_test > threshold).astype(int)
+
+# Train a Decision Tree Classifier with the binary target variable
+decision_tree = DecisionTreeClassifier(random_state=42)
+decision_tree.fit(X_state_train, y_state_train_binary)
+
+# Predict on the test set
+y_state_pred_binary = decision_tree.predict(X_state_test)
+
+# Calculate accuracy or other metrics
+accuracy = accuracy_score(y_state_test_binary, y_state_pred_binary)
+print(accuracy)
+
 
 # ## Resources and References
 # *What resources and references have you used for this project?*
